@@ -55,16 +55,33 @@ button.reset{font:inherit;font-weight:600;font-size:14px;margin-top:14px;backgro
 .spark{display:block;width:100%;height:70px;margin-top:12px}
 .strip{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .dot{aspect-ratio:1;border-radius:14px;border:1px solid var(--bd);background:var(--in);color:var(--mut);font:inherit;font-weight:800;font-size:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;cursor:pointer}
-.dot small{font-size:10px;font-weight:600;opacity:.85}
+.dot small{font-size:10px;font-weight:600;opacity:.85}.dot .amt{font-size:12px;font-weight:700;opacity:1;min-height:14px}
 .dot.w{background:var(--gn);color:#fff;border-color:var(--gn)}.dot.l{background:var(--rd);color:#fff;border-color:var(--rd)}.dot.z{background:var(--ink);color:#fff;border-color:var(--ink)}
 #strip label{margin-bottom:10px}
 .ap{width:100%;min-height:44px;border-radius:12px;border:1px solid var(--bd);background:var(--in);color:var(--mut);font:inherit;font-weight:800;font-size:14px;cursor:pointer;padding:0}
 .ap.y{background:var(--gnbg);color:var(--gn);border-color:var(--gn)}.ap.n{background:var(--rdbg);color:var(--rd);border-color:var(--rd)}
+
+/* domino blue-red theme */
+:root{--bg:#9dbbd0;--card:#fff;--in:#e3eef6;--tx:#04202f;--mut:#2a4a5f;--bd:#86a9bf;--ink:#00466a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#061824;--card:#0c2a3f;--in:#082133;--tx:#e6f2fa;--mut:#8fb0c4;--bd:#17405a;--ink:#00608f}}
+:root[data-theme="dark"]{--bg:#061824;--card:#0c2a3f;--in:#082133;--tx:#e6f2fa;--mut:#8fb0c4;--bd:#17405a;--ink:#00608f}
+body{background:radial-gradient(700px 320px at 8% -60px,rgba(0,70,106,.22),transparent) no-repeat,radial-gradient(600px 300px at 100% 0,rgba(192,16,43,.14),transparent) no-repeat,var(--bg)}
+h1{background:linear-gradient(90deg,#00486d,#c0102b);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+h1::after{background:linear-gradient(90deg,#00486d,#c0102b);width:60px}
+h2::before{content:"";display:inline-block;width:8px;height:18px;border-radius:4px;background:linear-gradient(#00486d,#c0102b);margin-right:10px;vertical-align:-3px}
+#stats .stat:first-child{background:linear-gradient(135deg,#002e47 0%,#00466a 60%,#00608f 100%);border:0;border-bottom:5px solid #c0102b;box-shadow:0 12px 30px rgba(0,70,106,.35)}
+#stats .stat:first-child span{color:#d6ecf8}
+#stats .stat:nth-child(odd){border-top:3px solid #00486d}#stats .stat:nth-child(even){border-top:3px solid #c0102b}
+.card[id^="card"]:not(.win):not(.loss):not(.flag){border-left-color:#00486d}
+input:focus,select:focus{outline-color:#00486d}
+#newm,#dl2{background:linear-gradient(135deg,#00486d,#00608f);border:0;color:#fff}
+.dot.z{background:#00486d;border-color:#00486d}
+.emo{border-color:#c0102b}
 </style></head><body>
 <h1>Mahfuj’s Trading Log</h1>
 <div class="card two" style="grid-template-columns:2fr 1fr"><div><label>Month</label><select id="msel"></select></div><div><label>&nbsp;</label><button class="reset" id="newm" style="margin:0;width:100%">+ New month</button></div></div>
 <div class="card"><label>Month name (rename any time)</label><input id="mname" type="text"></div>
-<div id="dls" style="margin-bottom:10px"><button class="reset" id="dl2" style="margin:0 0 6px;width:100%">⬇ Save journal as image (PNG)</button><button class="reset" id="dl" style="margin:0;width:100%">⬇ Download CSV (Excel)</button></div>
+<div id="dls" style="margin-bottom:10px"><button class="reset" id="dl2" style="margin:0 0 6px;width:100%">⬇ Download PDF (all data)</button><button class="reset" id="dl" style="margin:0;width:100%">⬇ Download image (PNG)</button></div>
 <p class="sub">Tap rules to cycle Y / N. Each month is saved separately on this device. A new month starts with your ending balance.</p>
 
 <div class="card two">
@@ -124,7 +141,8 @@ function hero(c,net){
  var pill=c.tr?'<em class="pill '+(net>=0?"up":"dn")+'">'+(net>=0?"▲ +":"▼ ")+money(net)+(c.start?" · "+pct(net/c.start):"")+'</em>':'<em class="pill">No trades yet</em>';
  return '<div class="stat"><span>Balance</span><b>'+money(c.bal)+'</b>'+pill+svg+'</div>';
 }
-function renderStrip(c){var s='<label>Tap a day to jump to it</label><div class="strip">';c.res.forEach(function(r,i){s+='<button class="dot '+(r.any?(r.net>0?"w":(r.net<0?"l":"z")):"")+'" data-i="'+i+'"><small>'+["Mon","Tue","Wed","Thu","Fri"][i%5]+'</small>'+(i+1)+'</button>'});document.getElementById("strip").innerHTML=s+'</div>'}
+function amt(x){var a=Math.abs(x),s=x>0?"+":(x<0?"-":"");return s+(a>=1000?(a/1000).toFixed(1)+"k":a.toFixed(a%1?2:0))}
+function renderStrip(c){var s='<label>Tap a day to jump to it</label><div class="strip">';c.res.forEach(function(r,i){s+='<button class="dot '+(r.any?(r.net>0?"w":(r.net<0?"l":"z")):"")+'" data-i="'+i+'"><small>'+["Mon","Tue","Wed","Thu","Fri"][i%5]+'</small>'+(i+1)+'<small class="amt">'+(r.any?amt(r.net):"")+'</small></button>'});document.getElementById("strip").innerHTML=s+'</div>'}
 document.getElementById("strip").addEventListener("click",function(e){var b=e.target.closest(".dot");if(!b)return;var el=document.getElementById("card"+b.dataset.i);if(el)el.scrollIntoView({behavior:"smooth",block:"start"})});
 function update(){
  var c=calc(),net=c.bal-c.start;
@@ -204,57 +222,13 @@ ml.addEventListener("input",function(){S.l=ml.value;syncD();save();update()});
 document.getElementById("reset").addEventListener("click",function(){
  if(ask(document.getElementById("reset"),"Tap again to clear this month")){var nm=S.nm,s0=S.s;S=blank();S.nm=nm;S.s=s0;save();load()}
 });
-function csv(){
- var c=calc(),q=function(v){v=(v===undefined||v===null)?"":String(v);return '"'+v.replace(/"/g,'""')+'"'};
- var W=["Mon","Tue","Wed","Thu","Fri"];
- var rows=[["Month","Day","Weekday"].concat(RULES.map(function(r,k){return "Rule "+(k+1)+" "+r}),["Pre-trade checks (of "+PRE.length+")"],
-  [1,2,3].reduce(function(a,t){return a.concat(["T"+t+" Pair","T"+t+" Dir","T"+t+" A+ Set","T"+t+" P/L"])},[]),
-  ["Net P/L","Balance","Mood (1-5)","Biggest mistake","Next day focus","Notes"])];
- S.d.forEach(function(d,i){var r=c.res[i],ck=(d.c||[]).slice(0,PRE.length).filter(Boolean).length;
-  var row=[S.nm,i+1,W[i%5]].concat(d.r.map(function(x){return x===1?"Followed":(x===2?"Broken":"")}),[ck]);
-  d.t.forEach(function(t){row.push(t.p,t.d,t.ap,t.pl)});
-  row.push(r.any?r.net:"",r.any?r.bal:"",d.m,d.mk,d.nf,d.n);rows.push(row)});
- rows.push([]);
- rows.push(["Starting balance",c.start]);rows.push(["Total trades",c.tr]);rows.push(["Wins",c.w]);rows.push(["Net P/L",c.bal-c.start]);rows.push(["Ending balance",c.bal]);rows.push(["Max drawdown",c.mdd]);
- (S.wm||[]).forEach(function(m,i){rows.push(["Week "+(i+1)+" biggest mistake",m])});
- return "\ufeff"+rows.map(function(r){return r.map(q).join(",")}).join("\r\n");
-}
 function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
-function journal(){
- var c=calc(),W=["Mon","Tue","Wed","Thu","Fri"],net=c.bal-c.start,cl=function(x){return x>0?"p":(x<0?"n":"")};
- var pf=c.gl===0?(c.gp===0?"–":"n/a"):(c.gp/Math.abs(c.gl)).toFixed(2);
- var h='<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(S.nm)+' journal</title><style>body{font:14px/1.5 Arial,sans-serif;max-width:720px;margin:0 auto;padding:14px;color:#111}h1{font-size:20px}h2{font-size:15px;margin:18px 0 6px;border-bottom:2px solid #1f2937}table{border-collapse:collapse;width:100%}td,th{border:1px solid #d1d5db;padding:5px 6px;text-align:left;font-size:13px}th{background:#f3f4f6}.d{border:1px solid #d1d5db;border-radius:8px;padding:8px 10px;margin:10px 0}.p{color:#15803d}.n{color:#b91c1c}</style></head><body>';
- h+='<h1>Mahfuj’s Trading Journal – '+esc(S.nm)+'</h1><h2>Monthly numbers</h2><table>';
- [["Starting balance",money(c.start)],["Ending balance",money(c.bal)],["Net P/L",money(net)],["Total trades",c.tr],["Win rate",c.tr?pct(c.w/c.tr):"–"],["Avg win",c.w?money(c.gp/c.w):"–"],["Avg loss",c.l?money(c.gl/c.l):"–"],["Profit factor",pf],["Max drawdown",c.tr?money(c.mdd)+" ("+pct(c.mddp)+")":"–"],["Discipline score",pct(c.disc)]].forEach(function(r){h+='<tr><th>'+r[0]+'</th><td>'+esc(r[1])+'</td></tr>'});
- h+='</table><h2>Weekly review</h2><table><tr><th>Week</th><th>Trades</th><th>Wins</th><th>Win %</th><th>Net P/L</th><th>Biggest mistake</th></tr>';
- c.wk.forEach(function(x,i){h+='<tr><td>Week '+(i+1)+'</td><td>'+x.t+'</td><td>'+x.w+'</td><td>'+(x.t?pct(x.w/x.t):"–")+'</td><td>'+money(x.n)+'</td><td>'+esc((S.wm||[])[i])+'</td></tr>'});
- h+='</table><h2>Daily journal</h2>';
- var any=false;
- S.d.forEach(function(d,i){
-  var r=c.res[i],rl=d.r.map(function(x,k){return x?(k+1)+". "+RULES[k]+" "+(x===1?"✓":"✗"):""}).filter(Boolean),
-   ck=(d.c||[]).slice(0,PRE.length).filter(Boolean).length,
-   tl=d.t.map(function(t,k){return (t.p||t.d||t.rr||t.pl)?"Trade "+(k+1)+": "+esc(t.p)+" "+esc(t.d)+(t.rr?" R:R 1:"+esc(t.rr):"")+(t.pl!==""?" P/L "+esc(t.pl):""):""}).filter(Boolean),
-   m=+d.m||0;
-  if(!(r.any||rl.length||ck||tl.length||m||d.mk||d.nf||d.n))return;
-  any=true;
-  h+='<div class="d"><b>'+W[i%5]+' · Day '+(i+1)+'</b>'+(r.any?' — Net P/L <span class="'+cl(r.net)+'">'+money(r.net)+'</span>, Balance '+money(r.bal):'')+'<br>';
-  if(tl.length)h+=tl.join("<br>")+'<br>';
-  if(rl.length)h+='Rules: '+esc(rl.join(" · "))+'<br>';
-  if(ck)h+='Pre-trade checklist: '+ck+'/'+PRE.length+'<br>';
-  if(m)h+='Mood: '+"★".repeat(m)+"☆".repeat(5-m)+'<br>';
-  if(d.mk)h+='<b>Biggest mistake:</b> '+esc(d.mk)+'<br>';
-  if(d.nf)h+='<b>Next day focus:</b> '+esc(d.nf)+'<br>';
-  if(d.n)h+='Notes: '+esc(d.n);
-  h+='</div>';
- });
- if(!any)h+='<p>No entries yet.</p>';
- return h+'</body></html>';
-}
 function jlines(){
  var c=calc(),W=["Mon","Tue","Wed","Thu","Fri"],net=c.bal-c.start,L=[];
  var pf=c.gl===0?(c.gp===0?"–":"n/a"):(c.gp/Math.abs(c.gl)).toFixed(2);
+ var apY=0,apN=0,apW=0;S.d.forEach(function(d){d.t.forEach(function(t){if(t.ap==="Yes"){apY++;if(num(t.pl)>0)apW++}else if(t.ap==="No")apN++})});
  L.push(["h1","Mahfuj’s Trading Journal – "+S.nm],["h2","Monthly numbers"]);
- [["Starting balance",money(c.start)],["Ending balance",money(c.bal)],["Net P/L",money(net)],["Total trades",c.tr],["Win rate",c.tr?pct(c.w/c.tr):"–"],["Avg win",c.w?money(c.gp/c.w):"–"],["Avg loss",c.l?money(c.gl/c.l):"–"],["Profit factor",pf],["Max drawdown",c.tr?money(c.mdd)+" ("+pct(c.mddp)+")":"–"],["Discipline score",pct(c.disc)]].forEach(function(r){L.push(["t",r[0]+": "+r[1]])});
+ [["Starting balance",money(c.start)],["Ending balance",money(c.bal)],["Net P/L",money(net)],["Total trades",c.tr],["Win rate",c.tr?pct(c.w/c.tr):"–"],["Avg win",c.w?money(c.gp/c.w):"–"],["Avg loss",c.l?money(c.gl/c.l):"–"],["Profit factor",pf],["Max drawdown",c.tr?money(c.mdd)+" ("+pct(c.mddp)+")":"–"],["Discipline score",pct(c.disc)],["Max daily loss",(num(S.l)||0)+"% ("+money(c.start*(num(S.l)||0)/100)+")"],["A+ sets",(apY+apN)?apY+" of "+(apY+apN)+" ("+pct(apY/(apY+apN))+")":"–"],["A+ win rate",apY?pct(apW/apY):"–"]].forEach(function(r){L.push(["t",r[0]+": "+r[1]])});
  L.push(["h2","Weekly review"]);
  c.wk.forEach(function(x,i){L.push(["t","Week "+(i+1)+": "+x.t+" trades, "+x.w+" wins, Net "+money(x.n)]);if(S.wm&&S.wm[i])L.push(["t","   Biggest mistake: "+S.wm[i]])});
  L.push(["h2","Daily journal"]);
@@ -264,12 +238,13 @@ function jlines(){
    ck=(d.c||[]).slice(0,PRE.length).filter(Boolean).length,
    tl=d.t.map(function(t,k){return (t.p||t.d||t.ap||t.pl)?"Trade "+(k+1)+": "+t.p+" "+t.d+(t.ap?" A+ "+t.ap:"")+(t.pl!==""?" P/L "+t.pl:""):""}).filter(Boolean),
    m=+d.m||0;
-  if(!(r.any||rl.length||ck||tl.length||m||d.mk||d.nf||d.n))return;
+  if(!(r.any||rl.length||ck||tl.length||m||d.mk||d.nf||d.n||d.ce))return;
   any=true;
   L.push([r.any?(r.net<0?"n":"p"):"b",W[i%5]+" · Day "+(i+1)+(r.any?"  |  Net P/L "+money(r.net)+"  |  Balance "+money(r.bal):"")]);
   tl.forEach(function(t){L.push(["t",t])});
   rl.forEach(function(t){L.push(["t","Rule "+t])});
   if(ck)L.push(["t","Pre-trade checklist: "+ck+"/"+PRE.length]);
+  if(d.ce)L.push(["t","✓ Control your emotion"]);
   if(m)L.push(["t","Mood: "+"★".repeat(m)+"☆".repeat(5-m)]);
   if(d.mk)L.push(["t","Biggest mistake: "+d.mk]);
   if(d.nf)L.push(["t","Next day focus: "+d.nf]);
@@ -290,13 +265,50 @@ function jpng(cb){
  var H=y+pad;cv.width=W;cv.height=H;x=cv.getContext("2d");
  x.fillStyle="#ffffff";x.fillRect(0,0,W,H);
  items.forEach(function(it){x.font=it[1];x.fillStyle=it[2];x.fillText(it[0],pad,it[3]);if(it[4]){x.fillRect(pad,it[4]-2,W-2*pad,2)}});
- cv.toBlob(cb,"image/png");
+ cv.toBlob(function(b){cb(b,cv)},"image/png");
 }
-var HAS=false;
+var HAS=false,DM=null;
+function mkpdf(pages){
+ var enc=new TextEncoder(),chunks=[],off=[],len=0,np=pages.length,pw=595;
+ function put(x){var b=typeof x==="string"?enc.encode(x):x;chunks.push(b);len+=b.length}
+ function obj(n,body){off[n]=len;put(n+" 0 obj\n"+body+"\nendobj\n")}
+ put("%PDF-1.4\n");
+ obj(1,"<< /Type /Catalog /Pages 2 0 R >>");
+ var kids=[];for(var k=0;k<np;k++)kids.push((3+3*k)+" 0 R");
+ obj(2,"<< /Type /Pages /Kids ["+kids.join(" ")+"] /Count "+np+" >>");
+ pages.forEach(function(p,k){var ph=Math.round(pw*p.h/p.w),cs="q "+pw+" 0 0 "+ph+" 0 0 cm /Im0 Do Q";
+  obj(3+3*k,"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 "+pw+" "+ph+"] /Resources << /XObject << /Im0 "+(5+3*k)+" 0 R >> >> /Contents "+(4+3*k)+" 0 R >>");
+  obj(4+3*k,"<< /Length "+cs.length+" >>\nstream\n"+cs+"\nendstream");
+  off[5+3*k]=len;put((5+3*k)+" 0 obj\n<< /Type /XObject /Subtype /Image /Width "+p.w+" /Height "+p.h+" /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length "+p.bytes.length+" >>\nstream\n");put(p.bytes);put("\nendstream\nendobj\n")});
+ var xr=len,total=3+3*np,x="xref\n0 "+total+"\n0000000000 65535 f \n";
+ for(var n=1;n<total;n++)x+=("0000000000"+off[n]).slice(-10)+" 00000 n \n";
+ put(x+"trailer\n<< /Size "+total+" /Root 1 0 R >>\nstartxref\n"+xr+"\n%%EOF");
+ return new Blob(chunks,{type:"application/pdf"});
+}
+function jpdf(cb){
+ jpng(function(b,cv){
+  if(!b){cb(null);return}
+  var W=cv.width,PH=Math.round(W*1.4142),n=Math.max(1,Math.ceil(cv.height/PH)),pages=[];
+  for(var k=0;k<n;k++){var pc=document.createElement("canvas");pc.width=W;pc.height=PH;var x=pc.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,W,PH);x.drawImage(cv,0,k*PH,W,PH,0,0,W,PH);
+   var bin=atob(pc.toDataURL("image/jpeg",0.9).split(",")[1]),u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);pages.push({bytes:u,w:W,h:PH})}
+  cb(mkpdf(pages));
+ });
+}
 function ov(h){var o=document.getElementById("ov");if(!o){o=document.createElement("div");o.id="ov";o.style.cssText="position:fixed;inset:0;z-index:50;background:var(--bg);overflow:auto;padding:12px;padding-top:calc(12px + env(safe-area-inset-top,0px))";document.body.appendChild(o)}o.innerHTML='<button class="reset" id="ovx" style="margin:0 0 10px;width:100%">✕ Close</button>'+h;o.style.display="block";o.scrollTop=0;document.getElementById("ovx").onclick=function(){o.style.display="none"};var cc=document.getElementById("cc");if(cc)cc.onclick=function(){var t=document.getElementById("ct"),ok=false;t.select();t.setSelectionRange(0,999999);try{ok=document.execCommand("copy")}catch(e){}cc.textContent=ok?"Copied ✓":"Select all and copy manually"}}
-document.getElementById("dl2").addEventListener("click",function(){if(HAS)return;jpng(function(b){if(!b)return;var r=new FileReader();r.onload=function(){ov('<img src="'+r.result+'" style="width:100%;border:1px solid var(--bd)"><p class="sub">Long-press the image, then tap Download image (or take a screenshot).</p>')};r.readAsDataURL(b)})});
-document.getElementById("dl").addEventListener("click",function(){if(HAS)return;ov('<textarea id="ct" readonly style="width:100%;height:50vh;font:12px monospace;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:6px;padding:8px">'+esc(csv())+'</textarea><button class="reset" id="cc" style="width:100%;margin:8px 0 0">Copy all</button>')});
-var dl=document.getElementById("dl"),DLL=dl.textContent;
-try{if(window.claude&&claude.use){claude.use("downloads").then(function(m){if(!m)return;HAS=true;document.getElementById("dl2").addEventListener("click",function(){var b2=document.getElementById("dl2"),lab=b2.textContent,nm=(S.nm||"month").replace(/[^A-Za-z0-9_-]+/g,"-");jpng(function(b){if(!b){b2.textContent="Could not make image";setTimeout(function(){b2.textContent=lab},3000);return}m.save({filename:"journal-"+nm+".png",data:b}).then(function(){b2.textContent="Saved ✓";setTimeout(function(){b2.textContent=lab},2500)},function(e){if(e&&e.code!=="declined"){b2.textContent="Could not save, try again";setTimeout(function(){b2.textContent=lab},3000)}})})});dl.addEventListener("click",function(){var nm=(S.nm||"month").replace(/[^A-Za-z0-9_-]+/g,"-");m.save({filename:"trading-log-"+nm+".csv",data:csv()}).then(function(){dl.textContent="Saved ✓";setTimeout(function(){dl.textContent=DLL},2500)},function(){})})}).catch(function(){})}}catch(e){}
+try{if(window.claude&&claude.use){claude.use("downloads").then(function(m){if(!m)return;HAS=true;DM=m;}).catch(function(){})}}catch(e){}
+document.getElementById("dl2").addEventListener("click",function(){var b2=document.getElementById("dl2"),lab=b2.textContent,nm=(S.nm||"month").replace(/[^A-Za-z0-9_-]+/g,"-"),fn="journal-"+nm+".pdf";
+ function msg(t,ms){b2.textContent=t;setTimeout(function(){b2.textContent=lab},ms||2500)}
+ b2.textContent="Making PDF…";
+ jpdf(function(blob){if(!blob){msg("Could not make PDF",3000);return}
+  if(DM){DM.save({filename:fn,data:blob}).then(function(){msg("Saved ✓")},function(e){msg(e&&e.code==="declined"?lab:"Could not save, try again",3000)});return}
+  if(window.self!==window.top){jpng(function(b){var r=new FileReader();r.onload=function(){ov('<img src="'+r.result+'" style="width:100%;border:1px solid var(--bd)"><p class="sub">Long-press the image, then tap Download image (or take a screenshot).</p>');b2.textContent=lab};r.readAsDataURL(b)});return}
+  var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=fn;document.body.appendChild(a);a.click();setTimeout(function(){a.remove()},500);msg("Saved ✓")})});
+document.getElementById("dl").addEventListener("click",function(){var b2=document.getElementById("dl"),lab=b2.textContent,nm=(S.nm||"month").replace(/[^A-Za-z0-9_-]+/g,"-"),fn="journal-"+nm+".png";
+ function msg(t,ms){b2.textContent=t;setTimeout(function(){b2.textContent=lab},ms||2500)}
+ b2.textContent="Making image…";
+ jpng(function(blob){if(!blob){msg("Could not make image",3000);return}
+  if(DM){DM.save({filename:fn,data:blob}).then(function(){msg("Saved ✓")},function(e){msg(e&&e.code==="declined"?lab:"Could not save, try again",3000)});return}
+  if(window.self!==window.top){var r=new FileReader();r.onload=function(){ov('<img src="'+r.result+'" style="width:100%;border:1px solid var(--bd)"><p class="sub">Long-press the image, then tap Download image (or take a screenshot).</p>');b2.textContent=lab};r.readAsDataURL(blob);return}
+  var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=fn;document.body.appendChild(a);a.click();setTimeout(function(){a.remove()},500);msg("Saved ✓")})});
 load();
 </script></body></html>
